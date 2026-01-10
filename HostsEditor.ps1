@@ -38,6 +38,10 @@ function Load-Hosts {
         $rtb.AppendText($line + "`r`n")
     }
     $rtb.Modified = $false
+
+    $rtb.SelectionStart = $rtb.TextLength - 2 
+    $rtb.SelectionLength = 0
+    $rtb.ScrollToCaret()  
 }
 Load-Hosts
 
