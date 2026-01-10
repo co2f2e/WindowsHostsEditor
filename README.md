@@ -1,4 +1,4 @@
-# host
+# WindowsHostsEditor
 
 ```powershell
 $Script = irm https://raw.githubusercontent.com/co2f2e/WindowsHostsEditor/main/HostsEditor.ps1
