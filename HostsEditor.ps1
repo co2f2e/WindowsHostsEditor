@@ -88,3 +88,4 @@ $form.Add_FormClosing({
 })
 
 $null = $form.ShowDialog()
+Exit
