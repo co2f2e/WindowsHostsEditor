@@ -71,16 +71,10 @@ $saveButton.Add_Click({ Save-Hosts })
 $form.Add_FormClosing({
     param($sender, $e)
 
-    $allLinesEmptyOrWhitespace = $true
-    foreach ($line in $rtb.Lines) {
-        if (-not [string]::IsNullOrWhiteSpace($line)) {
-            $allLinesEmptyOrWhitespace = $false
-            break
-        }
-    }
+    $originalText = (Get-Content $hostsPath -Raw).Trim()
+    $currentText  = ($rtb.Lines -join "`r`n").Trim()
+    $hasRealChanges = ($originalText -ne $currentText)
 
-    $hasRealChanges = -not $allLinesEmptyOrWhitespace
-  
     if ($hasRealChanges) {
         $result = [System.Windows.Forms.MessageBox]::Show("Content has been modified. Do you want to save?", "Prompt", "YesNoCancel", "Question")
         if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
@@ -95,6 +89,7 @@ $form.Add_FormClosing({
         }
     }
 })
+
 
 $null = $form.ShowDialog()
 Exit
