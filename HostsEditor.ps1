@@ -34,14 +34,26 @@ $form.Controls.Add($saveButton)
 function Load-Hosts {
     $rtb.Clear()
     $lines = Get-Content $hostsPath
+
     foreach ($line in $lines) {
         $rtb.AppendText($line + "`r`n")
     }
-    $rtb.Modified = $false
 
-    $rtb.SelectionStart = $rtb.TextLength - 2 
+    if ($rtb.TextLength -gt 0 -and -not $rtb.Text.EndsWith("`r`n")) {
+        $rtb.AppendText("`r`n")
+    }
+
+    $linesArray = $rtb.Lines
+    $lastLineStart = 0
+    for ($i = 0; $i -lt $linesArray.Count - 1; $i++) {
+        $lastLineStart += $linesArray[$i].Length + 2  # +2 因 CRLF
+    }
+
+    $rtb.SelectionStart = $lastLineStart
     $rtb.SelectionLength = 0
-    $rtb.ScrollToCaret()  
+    $rtb.ScrollToCaret()
+
+    $rtb.Modified = $false
 }
 Load-Hosts
 
