@@ -3,6 +3,12 @@ If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     Break
 }
 
+$hostsPath = "C:\Windows\System32\drivers\etc\hosts"
+
+If ((Get-Item $hostsPath).IsReadOnly) {
+    Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false
+}
+
 Add-Type -AssemblyName Microsoft.VisualBasic
 
 $inputText = [Microsoft.VisualBasic.Interaction]::InputBox(
