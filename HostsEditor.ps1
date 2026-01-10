@@ -35,6 +35,10 @@ function Load-Hosts {
     $rtb.Clear()
     $lines = Get-Content $hostsPath
 
+    while ($lines.Count -gt 0 -and [string]::IsNullOrWhiteSpace($lines[-1])) {
+        $lines = $lines[0..($lines.Count-2)]
+    }
+
     foreach ($line in $lines) {
         $rtb.AppendText($line + "`r`n")
     }
