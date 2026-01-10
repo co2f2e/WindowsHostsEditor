@@ -6,73 +6,64 @@ If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 $hostsPath = "C:\Windows\System32\drivers\etc\hosts"
 
-If ((Get-Item $hostsPath).IsReadOnly) {
-    Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false
-}
-
-$hostsContent = Get-Content -Path $hostsPath
-
 Add-Type -AssemblyName System.Windows.Forms
+
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "添加 hosts 条目"
-$form.Width = 500
-$form.Height = 400
+$form.Text = "Hosts 编辑器"
+$form.Width = 700
+$form.Height = 600
 $form.StartPosition = "CenterScreen"
 
 $textbox = New-Object System.Windows.Forms.TextBox
 $textbox.Multiline = $true
 $textbox.ScrollBars = "Vertical"
 $textbox.WordWrap = $false
-$textbox.Width = 460
-$textbox.Height = 300
-$textbox.Top = 10
-$textbox.Left = 10
+$textbox.Font = New-Object System.Drawing.Font("Consolas",10)
+$textbox.Dock = "Fill"
 $form.Controls.Add($textbox)
 
-$okButton = New-Object System.Windows.Forms.Button
-$okButton.Text = "确定"
-$okButton.Top = 320
-$okButton.Left = 200
-$okButton.Width = 80
-$okButton.Add_Click({$form.DialogResult = [System.Windows.Forms.DialogResult]::OK})
-$form.Controls.Add($okButton)
+$textbox.Text = Get-Content $hostsPath | Out-String
 
-if ($form.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
-    Write-Output "用户取消输入，退出脚本。"
-    Break
-}
+$saveButton = New-Object System.Windows.Forms.Button
+$saveButton.Text = "保存"
+$saveButton.Width = 100
+$saveButton.Height = 30
+$saveButton.Top = 10
+$saveButton.Left = 580
+$form.Controls.Add($saveButton)
 
-$linesToAdd = $textbox.Text -split "`r?`n"
-
-$addedLines = @()
-foreach ($line in $linesToAdd) {
-    $trimmedLine = $line.Trim()
-    if (-not [string]::IsNullOrWhiteSpace($trimmedLine) -and $hostsContent -notcontains $trimmedLine) {
-        Add-Content -Path $hostsPath -Value ($trimmedLine + "`n")  # 这里强制换行
-        $addedLines += $trimmedLine
+$saveButton.Add_Click({
+    try {
+        if ((Get-Item $hostsPath).IsReadOnly) {
+            Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false
+        }
+        Set-Content -Path $hostsPath -Value $textbox.Text
+        ipconfig /flushdns | Out-Null
+        [System.Windows.Forms.MessageBox]::Show("保存成功，DNS 已刷新。","成功","OK","Information")
+    } catch {
+        [System.Windows.Forms.MessageBox]::Show("保存失败！请检查权限或文件是否被占用。","错误","OK","Error")
     }
-}
+})
 
-try {
-    ipconfig /flushdns | Out-Null
-    $dnsMessage = "DNS 缓存已刷新。"
-} catch {
-    $dnsMessage = "刷新 DNS 缓存失败，请手动执行 'ipconfig /flushdns'。"
-}
+$form.Add_FormClosing({
+    if ($textbox.Modified) {
+        $result = [System.Windows.Forms.MessageBox]::Show("内容已修改，是否保存？","提示","YesNoCancel","Question")
+        if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
+            try {
+                if ((Get-Item $hostsPath).IsReadOnly) {
+                    Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false
+                }
+                Set-Content -Path $hostsPath -Value $textbox.Text
+                ipconfig /flushdns | Out-Null
+            } catch {
+                [System.Windows.Forms.MessageBox]::Show("保存失败！","错误","OK","Error")
+            }
+        } elseif ($result -eq [System.Windows.Forms.DialogResult]::Cancel) {
+            $form.CloseReason = "None"
+            $form.Cancel = $true
+        }
+    }
+})
 
-Add-Type -AssemblyName System.Windows.Forms
-if ($addedLines.Count -gt 0) {
-    [System.Windows.Forms.MessageBox]::Show(
-        "成功添加以下条目:`n" + ($addedLines -join "`n") + "`n`n$dnsMessage",
-        "操作成功",
-        "OK",
-        "Information"
-    )
-} else {
-    [System.Windows.Forms.MessageBox]::Show(
-        "输入的条目已全部存在，无需添加。`n$dnsMessage",
-        "提示",
-        "OK",
-        "Information"
-    )
-}
+# 显示 GUI
+$form.ShowDialog()
