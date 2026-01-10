@@ -73,7 +73,16 @@ function Save-Hosts {
 $saveButton.Add_Click({ Save-Hosts })
 
 $form.Add_FormClosing({
-    param($sender, $e) 
+    param($sender, $e)
+
+    $allLinesEmpty = $true
+    foreach ($line in $rtb.Lines) {
+        if (-not [string]::IsNullOrWhiteSpace($line)) {
+            $allLinesEmpty = $false
+            break
+        }
+    }
+    
     if ($rtb.Modified) {
         $result = [System.Windows.Forms.MessageBox]::Show("内容已修改，是否保存？","提示","YesNoCancel","Question")
         if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
