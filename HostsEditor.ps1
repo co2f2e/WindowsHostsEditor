@@ -79,9 +79,9 @@ $form.Add_FormClosing({
         }
     }
 
-    $modifiedToCheck = if ($allLinesEmptyOrWhitespace) { $false } else { $rtb.Modified }
-
-    if ($modifiedToCheck) {
+    $hasRealChanges = -not $allLinesEmptyOrWhitespace
+  
+    if ($hasRealChanges) {
         $result = [System.Windows.Forms.MessageBox]::Show("Content has been modified. Do you want to save?", "Prompt", "YesNoCancel", "Question")
         if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
             $success = Save-Hosts
