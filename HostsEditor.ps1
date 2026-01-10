@@ -61,7 +61,7 @@ function Save-Hosts {
 
 $saveButton.Add_Click({ Save-Hosts })
 
-$null.Add_FormClosing({
+$form.Add_FormClosing({
     if ($rtb.Modified) {
         $result = [System.Windows.Forms.MessageBox]::Show("内容已修改，是否保存？","提示","YesNoCancel","Question")
         if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
@@ -77,4 +77,4 @@ $null.Add_FormClosing({
     }
 })
 
-$form.ShowDialog()
+$null = $form.ShowDialog()
