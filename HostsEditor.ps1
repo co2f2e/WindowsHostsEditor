@@ -39,22 +39,15 @@ function Load-Hosts {
         $rtb.AppendText($line + "`r`n")
     }
 
-    if ($rtb.TextLength -gt 0 -and -not $rtb.Text.EndsWith("`r`n")) {
-        $rtb.AppendText("`r`n")
-    }
-
-    $linesArray = $rtb.Lines
-    $lastLineStart = 0
-    for ($i = 0; $i -lt $linesArray.Count - 1; $i++) {
-        $lastLineStart += $linesArray[$i].Length + 2  # +2 因 CRLF
-    }
+    $lastLineStart = $rtb.TextLength
 
     $rtb.SelectionStart = $lastLineStart
     $rtb.SelectionLength = 0
-    $rtb.ScrollToCaret()
+    $rtb.ScrollToCaret()  
 
     $rtb.Modified = $false
 }
+
 Load-Hosts
 
 function Save-Hosts {
