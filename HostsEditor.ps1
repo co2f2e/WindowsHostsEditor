@@ -15,7 +15,6 @@ $form.Width = 800
 $form.Height = 600
 $form.StartPosition = "CenterScreen"
 
-# RichTextBox 支持彩色显示
 $rtb = New-Object System.Windows.Forms.RichTextBox
 $rtb.Multiline = $true
 $rtb.ScrollBars = "Vertical"
@@ -33,22 +32,10 @@ $saveButton.Left = 680
 $form.Controls.Add($saveButton)
 
 function Load-Hosts {
-    $lines = Get-Content $hostsPath
     $rtb.Clear()
-    $counts = @{}
-    for ($i=0; $i -lt $lines.Count; $i++) {
-        $line = $lines[$i]
-        $displayLine = "{0:D3}: {1}" -f ($i+1), $line
-        $rtb.AppendText($displayLine + "`r`n")
-        if (-not [string]::IsNullOrWhiteSpace($line)) {
-            if ($counts.ContainsKey($line)) {
-                $counts[$line]++
-                $rtb.Select($rtb.TextLength - $displayLine.Length - 2, $displayLine.Length)
-                $rtb.SelectionBackColor = [System.Drawing.Color]::LightPink
-            } else {
-                $counts[$line] = 1
-            }
-        }
+    $lines = Get-Content $hostsPath
+    foreach ($line in $lines) {
+        $rtb.AppendText($line + "`r`n")
     }
     $rtb.Modified = $false
 }
@@ -59,13 +46,12 @@ function Save-Hosts {
         if ((Get-Item $hostsPath).IsReadOnly) {
             Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false
         }
-        $textLines = $rtb.Lines | ForEach-Object { $_ -replace "^\d{3}:\s", "" }
-        $textLines | Out-File -FilePath $hostsPath -Encoding ASCII
+        $rtb.Lines | Out-File -FilePath $hostsPath -Encoding ASCII
         ipconfig /flushdns | Out-Null
         Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $true
         $rtb.Modified = $false
         [System.Windows.Forms.MessageBox]::Show("保存成功，DNS 已刷新，hosts 文件已设置为只读。","成功","OK","Information")
-        Load-Hosts 
+        Load-Hosts
         return $true
     } catch {
         [System.Windows.Forms.MessageBox]::Show("保存失败！请检查权限或文件是否被占用。","错误","OK","Error")
@@ -80,9 +66,9 @@ $form.Add_FormClosing({
         $result = [System.Windows.Forms.MessageBox]::Show("内容已修改，是否保存？","提示","YesNoCancel","Question")
         if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
             $success = Save-Hosts
-            if (-not $success) { $form.Cancel = $true }  
+            if (-not $success) { $form.Cancel = $true }
         } elseif ($result -eq [System.Windows.Forms.DialogResult]::Cancel) {
-            $form.Cancel = $true  
+            $form.Cancel = $true
         }
     } else {
         if (-not (Get-Item $hostsPath).IsReadOnly) {
