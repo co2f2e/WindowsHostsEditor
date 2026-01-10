@@ -70,14 +70,18 @@ $saveButton.Add_Click({ Save-Hosts })
 
 $form.Add_FormClosing({
     param($sender, $e)
-    $allLinesEmpty = $true
+
+    $allLinesEmptyOrWhitespace = $true
     foreach ($line in $rtb.Lines) {
         if (-not [string]::IsNullOrWhiteSpace($line)) {
-            $allLinesEmpty = $false
+            $allLinesEmptyOrWhitespace = $false
             break
         }
     }
-    if ($rtb.Modified -and -not $allLinesEmpty) {
+
+    $modifiedToCheck = if ($allLinesEmptyOrWhitespace) { $false } else { $rtb.Modified }
+
+    if ($modifiedToCheck) {
         $result = [System.Windows.Forms.MessageBox]::Show("Content has been modified. Do you want to save?", "Prompt", "YesNoCancel", "Question")
         if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
             $success = Save-Hosts
