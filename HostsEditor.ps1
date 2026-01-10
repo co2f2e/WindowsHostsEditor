@@ -34,12 +34,18 @@ $form.Controls.Add($saveButton)
 
 $saveButton.Add_Click({
     try {
+        # 取消只读属性
         if ((Get-Item $hostsPath).IsReadOnly) {
             Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false
         }
-        Set-Content -Path $hostsPath -Value $textbox.Text
+        # 保存到 hosts 文件，强制 ASCII 编码
+        $textbox.Text | Out-File -FilePath $hostsPath -Encoding ASCII
+        # 刷新 DNS
         ipconfig /flushdns | Out-Null
         [System.Windows.Forms.MessageBox]::Show("保存成功，DNS 已刷新。","成功","OK","Information")
+        # 修改 hosts 文件为只读
+        Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $true
+        $textbox.Modified = $false  # 重置修改标记
     } catch {
         [System.Windows.Forms.MessageBox]::Show("保存失败！请检查权限或文件是否被占用。","错误","OK","Error")
     }
@@ -53,17 +59,18 @@ $form.Add_FormClosing({
                 if ((Get-Item $hostsPath).IsReadOnly) {
                     Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false
                 }
-                Set-Content -Path $hostsPath -Value $textbox.Text
+                $textbox.Text | Out-File -FilePath $hostsPath -Encoding ASCII
                 ipconfig /flushdns | Out-Null
+                # 修改 hosts 文件为只读
+                Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $true
+                $textbox.Modified = $false
             } catch {
                 [System.Windows.Forms.MessageBox]::Show("保存失败！","错误","OK","Error")
             }
         } elseif ($result -eq [System.Windows.Forms.DialogResult]::Cancel) {
-            $form.CloseReason = "None"
             $form.Cancel = $true
         }
     }
 })
 
-# 显示 GUI
 $form.ShowDialog()
