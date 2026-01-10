@@ -39,9 +39,7 @@ function Load-Hosts {
         $rtb.AppendText($line + "`r`n")
     }
 
-    $lastLineStart = $rtb.TextLength
-
-    $rtb.SelectionStart = $lastLineStart
+    $rtb.SelectionStart = $rtb.TextLength
     $rtb.SelectionLength = 0
     $rtb.ScrollToCaret()  
 
